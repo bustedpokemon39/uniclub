@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Uniclub</title>
+    <meta name="description" content="Join Uniclub - Connect, Learn, and Build the Future of AI" />
+    <meta name="author" content="Uniclub" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/Assets/App Logo.png">
+
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="apple-touch-icon" href="/Assets/App Logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Uniclub">
+
+    <meta property="og:title" content="Uniclub - College AI Community" />
+    <meta name="og:description" content="Join Uniclub - Connect, Learn, and Build the Future of AI" />
+    <meta property="og:type" content="website" />
+    <!-- Removed Lovable og:image -->
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <!-- Removed Lovable twitter:site and twitter:image -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS for green logo -->
+    <style>
+      /* Make favicon and logo appear green */
+      link[rel="icon"] img,
+      link[rel="apple-touch-icon"] img {
+        filter: hue-rotate(120deg) saturate(1.5) brightness(1.2);
+      }
+      
+      /* For any logo images displayed on the page */
+      img[src*="App Logo.png"] {
+        filter: hue-rotate(120deg) saturate(1.5) brightness(1.2);
+      }
+      
+      /* Alternative green filter - try this if the first one doesn't work well */
+      img[src*="App Logo.png"] {
+        filter: sepia(1) hue-rotate(90deg) saturate(2) brightness(1.1);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

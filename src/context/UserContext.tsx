@@ -1,0 +1,328 @@
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  uniqueId: string;
+  profile: {
+    bio: string;
+    location: string;
+    website: string;
+    interests: string[];
+  };
+  major: string;
+  year: string;
+  memberId: string;
+  profileImage: string | null;
+}
+
+export interface AuthUser {
+  email: string;
+  name: string;
+  uniqueId: string;
+}
+
+const defaultUser: User = {
+  id: '',
+  email: '',
+  name: '',
+  uniqueId: '',
+  profile: {
+    bio: '',
+    location: '',
+    website: '',
+    interests: [],
+  },
+  major: '',
+  year: '',
+  memberId: '',
+  profileImage: null,
+};
+
+interface UserContextType {
+  user: User;
+  authUser: AuthUser | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  setUser: (user: User) => void;
+  setAuthUser: (authUser: AuthUser | null) => void;
+  updateProfileImage: (image: string | null) => void;
+  login: (token: string, authUser: AuthUser) => void;
+  logout: () => void;
+}
+
+const UserContext = createContext<UserContextType | undefined>(undefined);
+
+export const UserProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User>(() => {
+    // Initialize from localStorage
+    const savedImage = localStorage.getItem('userProfileImage');
+    return { ...defaultUser, profileImage: savedImage || null };
+  });
+  
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const logout = () => {
+    console.log('🚪 Logging out user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('authUser');
+    localStorage.removeItem('userProfileImage');
+    setAuthUser(null);
+    setIsAuthenticated(false);
+    setUser({ ...defaultUser });
+  };
+
+
+
+  // Validate token by making a request to backend
+  const validateToken = async (token: string) => {
+    try {
+      const response = await fetch('/api/auth/validate', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return data.valid;
+      }
+      return false;
+    } catch (error) {
+      console.error('Token validation failed:', error);
+      return false;
+    }
+  };
+
+  // Check for existing authentication on app load
+  useEffect(() => {
+    console.log('🔍 Checking existing authentication...');
+    
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token');
+      const savedAuthUser = localStorage.getItem('authUser');
+      
+      console.log('Token exists:', !!token);
+      console.log('Saved user exists:', !!savedAuthUser);
+      
+      // TEMPORARY: Allow access without authentication for debugging
+      if (!token || !savedAuthUser) {
+        console.log('❌ Missing token or user data - but allowing access for debugging');
+        // Set a temporary user for debugging using real enrolled user data
+        const debugUser = {
+          email: 'ashwin.thomas@utdallas.edu',
+          name: 'Ashwin Thomas',
+          uniqueId: 'UTDAIC1'
+        };
+        
+        // Create a simple debug token for API calls (force refresh)
+        const debugToken = 'debug-token-for-ashwin-thomas';
+        localStorage.removeItem('token'); // Clear any expired token first
+        localStorage.setItem('token', debugToken);
+        localStorage.setItem('authUser', JSON.stringify(debugUser));
+        
+        setAuthUser(debugUser);
+        setIsAuthenticated(true);
+        setUser({
+          ...defaultUser,
+          id: '507f1f77bcf86cd799439011',  // Valid ObjectId for debug user
+          name: debugUser.name,
+          email: debugUser.email,
+          memberId: debugUser.uniqueId,
+          major: 'Computer Engineering',
+          year: 'Graduate Student'
+        });
+        console.log('🔧 Debug user set with name:', debugUser.name);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const parsedAuthUser = JSON.parse(savedAuthUser);
+        
+        // Validate required fields
+        if (!parsedAuthUser.email || !parsedAuthUser.name || !parsedAuthUser.uniqueId) {
+          console.log('❌ Invalid user data structure');
+          logout();
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('✅ Found valid auth data:', parsedAuthUser);
+        setAuthUser(parsedAuthUser);
+        setIsAuthenticated(true);
+        
+        // Update user context with auth data first
+        setUser(prev => ({
+          ...prev,
+          name: parsedAuthUser.name,
+          email: parsedAuthUser.email,
+          memberId: parsedAuthUser.uniqueId,
+        }));
+        
+        // Fetch complete user profile including avatar from backend
+        await fetchUserProfile(token);
+        
+      } catch (error) {
+        console.error('❌ Error parsing saved auth user:', error);
+        logout();
+      }
+      
+      setIsLoading(false);
+    };
+
+    checkAuth();
+  }, []);
+
+  // Fetch user profile data including avatar from backend
+  const fetchUserProfile = async (token?: string) => {
+    try {
+      const authToken = token || localStorage.getItem('token');
+      if (!authToken) {
+        console.log('🔧 No token available, skipping profile fetch (debug mode)');
+        return;
+      }
+
+      const response = await fetch('/api/users/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.user) {
+          console.log('👤 Fetched user profile:', data.user);
+          
+          // Extract avatar data properly - check multiple possible locations
+          let avatarData = null;
+          if (data.user.avatar?.data) {
+            avatarData = data.user.avatar.data;
+            console.log('🖼️ Found avatar data in user.avatar.data');
+          } else if (data.user.profile?.avatar?.data) {
+            avatarData = data.user.profile.avatar.data;
+            console.log('🖼️ Found avatar data in user.profile.avatar.data');
+          }
+          
+          if (avatarData) {
+            console.log('🖼️ Avatar data preview:', avatarData.substring(0, 50) + '...');
+          } else {
+            console.log('🖼️ No avatar data found');
+          }
+          
+          // Update user state with complete profile data
+          setUser(prev => ({
+            ...prev,
+            id: data.user.id,
+            name: data.user.name,
+            email: data.user.email,
+            memberId: data.user.uniqueId,
+            profile: data.user.profile || {
+              bio: '',
+              location: '',
+              website: '',
+              interests: []
+            },
+            profileImage: avatarData
+          }));
+
+          // Store avatar in localStorage
+          if (avatarData) {
+            localStorage.setItem('userProfileImage', avatarData);
+          } else {
+            localStorage.removeItem('userProfileImage');
+          }
+        }
+      } else {
+        console.error('Failed to fetch user profile:', response.statusText, '- keeping existing user data');
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error, '- keeping existing user data');
+    }
+  };
+
+  const login = (token: string, newAuthUser: AuthUser) => {
+    console.log('🔐 Logging in user:', newAuthUser);
+    
+    // Validate input
+    if (!token || !newAuthUser || !newAuthUser.email || !newAuthUser.name || !newAuthUser.uniqueId) {
+      console.error('❌ Invalid login data provided');
+      return;
+    }
+    
+    localStorage.setItem('token', token);
+    localStorage.setItem('authUser', JSON.stringify(newAuthUser));
+    setAuthUser(newAuthUser);
+    setIsAuthenticated(true);
+    
+    // Update user context with auth data and fetch complete profile
+    setUser(prev => ({
+      ...prev,
+      name: newAuthUser.name,
+      email: newAuthUser.email,
+      memberId: newAuthUser.uniqueId,
+      major: '', // Will be filled from user profile
+      year: '', // Will be filled from user profile
+    }));
+
+    // Fetch complete user profile including avatar
+    fetchUserProfile(token);
+  };
+
+  const updateProfileImage = async (image: string | null) => {
+    try {
+      // Update user state immediately with Base64 data
+      setUser((prev) => ({ ...prev, profileImage: image }));
+      
+      if (image) {
+        localStorage.setItem('userProfileImage', image);
+      } else {
+        localStorage.removeItem('userProfileImage');
+      }
+    } catch (error) {
+      console.error('Error updating profile image:', error);
+    }
+  };
+
+  return (
+    <UserContext.Provider value={{ 
+      user, 
+      authUser,
+      isAuthenticated,
+      isLoading,
+      setUser, 
+      setAuthUser,
+      updateProfileImage,
+      login,
+      logout
+    }}>
+      {children}
+    </UserContext.Provider>
+  );
+};
+
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (!context) throw new Error('useUser must be used within a UserProvider');
+  return context;
+};
+
+// Update avatar handling in UserContext
+const getAvatarUrl = (user: any) => {
+  if (user?.profile?.avatar?.data) {
+    // Return Base64 data directly for img src
+    return user.profile.avatar.data;
+  }
+  if (user?.avatar?.data) {
+    // Handle direct avatar field
+    return user.avatar.data;
+  }
+  return null;
+}; 

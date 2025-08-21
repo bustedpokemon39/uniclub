@@ -1,0 +1,40 @@
+{
+  "name": "uniclub-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "import": "node importCSV.js",
+    "daily-curator": "node jobs/midnightCuration.js",
+    "curation": "node manual-curation.js",
+    "curation:verbose": "node manual-curation.js --verbose",
+    "recount-comments": "node scripts/recountComments.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0",
+    "@mozilla/readability": "^0.6.0",
+    "axios": "^1.9.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "jsdom": "^26.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.15.1",
+    "multer": "^2.0.1",
+    "node-cron": "^3.0.3",
+    "node-fetch": "^3.3.2",
+    "node-readability": "^3.0.0"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^9.8.0",
+    "nodemon": "^3.1.10"
+  }
+}
