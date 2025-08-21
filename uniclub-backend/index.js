@@ -38,11 +38,14 @@ app.use(cors({
   optionsSuccessStatus: 204
 }));
 
-// Debug the MongoDB URI being used - force correct database
-const mongoUri = 'mongodb+srv://ashwinpaul39:ifjL7l3XxcGby7a1@uniclub.nfk2jwh.mongodb.net/uniclub?retryWrites=true&w=majority&appName=uniclub';
-console.log('🔗 MongoDB URI being used:', mongoUri);
+// Connect to MongoDB using environment variable
+const mongoUri = process.env.MONGODB_URI;
+if (!mongoUri) {
+  console.error('❌ MONGODB_URI environment variable is not set!');
+  process.exit(1);
+}
+console.log('🔗 Connecting to MongoDB...');
 
-// Connect to MongoDB - using the correct database name
 mongoose.connect(mongoUri)
   .then(async () => {
     console.log('Connected to MongoDB');

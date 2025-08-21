@@ -74,7 +74,7 @@ npm run install-all
 Create `.env` file in `uniclub-backend/` directory:
 ```bash
 # MongoDB Connection
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/uniclub
+MONGODB_URI=mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@YOUR_CLUSTER.mongodb.net/uniclub
 
 # JWT Secret
 JWT_SECRET=your-secret-key
@@ -291,7 +291,7 @@ Create a `.env` file in the `uniclub-backend/` directory:
 
 ```bash
 # MongoDB Connection (Required)
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/uniclub
+MONGODB_URI=mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@YOUR_CLUSTER.mongodb.net/uniclub
 
 # JWT Secret (Required)
 JWT_SECRET=your-super-secret-jwt-key
